@@ -10,7 +10,6 @@ public class VirtualKDC extends UnicastRemoteObject implements VirtualKDCInterfa
 	private static final long serialVersionUID = 1L;
 	private ArrayList<StoredClient> clients = new ArrayList<StoredClient>();
 	
-	
 	VirtualKDC() throws RemoteException{
 		
 	}
@@ -58,6 +57,15 @@ public class VirtualKDC extends UnicastRemoteObject implements VirtualKDCInterfa
 		}
 		return tempString;
 	}
-
+	
+	public byte[] getClientMessage(String name) throws RemoteException{
+		byte[] message = clients.get(getIndexOfName(name)).getMessage();
+		
+		return message;
+	}
+	
+	public void setClientMessage(String name, byte[] message) throws RemoteException{
+		clients.get(getIndexOfName(name)).setMessage(message);
+	}
 	
 }
