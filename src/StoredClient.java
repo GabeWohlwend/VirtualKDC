@@ -1,7 +1,9 @@
+import java.nio.charset.Charset;
 import java.security.Key;
 
 public class StoredClient {
-
+	
+	private byte[] message = "".getBytes(Charset.forName("UTF-8"));
 	private String name;
 	private Key publicKey;
 
@@ -13,7 +15,7 @@ public class StoredClient {
 		name = "Not Given";
 		publicKey = null;
 	}
-
+	
 	
 	public String getName(){
 		return name;
@@ -21,5 +23,13 @@ public class StoredClient {
 	
 	public Key getPubKey(){
 		return publicKey;
+	}
+	
+	public byte[] getMessage(){
+		return message;
+	}
+	
+	public void setMessage(byte [] message){
+		this.message = message;
 	}
 }

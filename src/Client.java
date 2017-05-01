@@ -1,12 +1,23 @@
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Scanner;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import java.security.Key;
 
 public class Client
 {
@@ -25,8 +36,10 @@ public class Client
 	private static Registry reg;								//the RMI registry object
 	private static KeyPairGenerator kpg;						//this object generates key pairs
 	private static String message;								//this is the message to send to the other client
+	private static boolean isAMessage = false;					//checks if there is a message
 	
-	public static void main(String[] args){
+	
+	public static void main(String[] args) throws InterruptedException, RemoteException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException{
 		
 		//get the IP of the server from the user
 		System.out.println("Enter IP of server");
@@ -111,11 +124,82 @@ public class Client
 		 * Let me know what issues you have or if you have any questions
 		 */
 		
+		//Gets the message in bytes to encrypt
+		byte [] encryptedmessage = message.getBytes(Charset.forName("UTF-8"));
 		
-
-
+		
+		//Tries to Encrypt the message
+		try {
+			try {
+				encryptedmessage = encrypt(otherPublic, encryptedmessage);
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalBlockSizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+		try {
+			kdc.setClientMessage(otherClient, encryptedmessage);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		do{
+			byte [] receivedMessage = kdc.getClientMessage(clientName);
+			
+			if(Arrays.equals(receivedMessage, "".getBytes(Charset.forName("UTF-8")))){
+				isAMessage = false;
+				Thread.sleep(150);
+			}
+			else{
+				
+				isAMessage = true;
+				receivedMessage = decrypt(privateKey, receivedMessage);
+				
+				String receivedMessageString = new String(receivedMessage, "UTF8");
+				
+			}			
+			
+		}while(!isAMessage);
+		
+		
+		
 	}
 
+	private static byte[] encrypt(Key otherPublic2, byte[] encryptedmessage) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		
+		cipher.init(Cipher.ENCRYPT_MODE, otherPublic2);
+		
+		return cipher.doFinal(encryptedmessage);
+		
+	}
+
+	private static byte[] decrypt (Key key, byte[] ciphertext) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
+		
+		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
+		
+		cipher.init(Cipher.DECRYPT_MODE,  key);
+		
+		return cipher.doFinal(ciphertext);
+	}
+	
+	
 	private static void printError()
 	{
 		System.out.println("SOMETHING DIDN'T WORK");

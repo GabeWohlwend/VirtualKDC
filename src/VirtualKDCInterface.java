@@ -9,5 +9,7 @@ public interface VirtualKDCInterface extends Remote
 	public Key getKeyFromClientName(String name) throws RemoteException;
 	public boolean nameExists(String name) throws RemoteException;
 	public String clientNamesToString() throws RemoteException;
+	public void setClientMessage(String otherClient, byte[] encryptedmessage) throws RemoteException;
+	public byte[] getClientMessage(String clientName) throws RemoteException;
 	
 }
